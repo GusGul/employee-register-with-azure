@@ -44,12 +44,12 @@ public class EmployeeController : ControllerBase
     public IActionResult Criar(Employee employee)
     {
         _context.Employees.Add(employee);
-        // TODO: Chamar o método SaveChanges do _context para salvar no Banco SQL
+        _context.SaveChanges();
 
         var tableClient = GetTableClient();
         var employeeLog = new EmployeeLog(employee, ActionType.Inclusao, employee.Department, Guid.NewGuid().ToString());
 
-        // TODO: Chamar o método UpsertEntity para salvar no Azure Table
+        tableClient.CreateIfNotExists();
 
         return CreatedAtAction(nameof(ObterPorId), new { id = employee.Id }, employee);
     }
@@ -57,22 +57,27 @@ public class EmployeeController : ControllerBase
     [HttpPut("{id}")]
     public IActionResult Atualizar(int id, Employee employee)
     {
-        var employeeBanco = _context.Employees.Find(id);
+        var dbEmployee = _context.Employees.Find(id);
 
-        if (employeeBanco == null)
+        if (dbEmployee == null)
             return NotFound();
 
-        employeeBanco.Name = employee.Name;
-        employeeBanco.Address = employee.Address;
-        // TODO: As propriedades estão incompletas
+        dbEmployee.Name = employee.Name;
+        dbEmployee.Address = employee.Address;
+        dbEmployee.Ramal = employee.Ramal;
+        dbEmployee.Email = employee.Email;
+        dbEmployee.Department = employee.Department;
+        dbEmployee.Salary = employee.Salary;
+        dbEmployee.AdmissionDate = employee.AdmissionDate;
 
-        // TODO: Chamar o método de Update do _context.Employees para salvar no Banco SQL
+
+        _context.Employees.Update(dbEmployee);
         _context.SaveChanges();
 
         var tableClient = GetTableClient();
-        var employeeLog = new EmployeeLog(employeeBanco, ActionType.Atualizacao, employeeBanco.Department, Guid.NewGuid().ToString());
+        var employeeLog = new EmployeeLog(dbEmployee, ActionType.Atualizacao, dbEmployee.Department, Guid.NewGuid().ToString());
 
-        // TODO: Chamar o método UpsertEntity para salvar no Azure Table
+        tableClient.UpsertEntity(employeeLog);
 
         return Ok();
     }
@@ -80,18 +85,18 @@ public class EmployeeController : ControllerBase
     [HttpDelete("{id}")]
     public IActionResult Deletar(int id)
     {
-        var employeeBanco = _context.Employees.Find(id);
+        var dbEmployee = _context.Employees.Find(id);
 
-        if (employeeBanco == null)
+        if (dbEmployee == null)
             return NotFound();
 
-        // TODO: Chamar o método de Remove do _context.Employees para salvar no Banco SQL
+        _context.Employees.Remove(dbEmployee);
         _context.SaveChanges();
 
         var tableClient = GetTableClient();
-        var employeeLog = new EmployeeLog(employeeBanco, ActionType.Remocao, employeeBanco.Department, Guid.NewGuid().ToString());
+        var employeeLog = new EmployeeLog(dbEmployee, ActionType.Remocao, dbEmployee.Department, Guid.NewGuid().ToString());
 
-        // TODO: Chamar o método UpsertEntity para salvar no Azure Table
+        tableClient.UpsertEntity(employeeLog);
 
         return NoContent();
     }

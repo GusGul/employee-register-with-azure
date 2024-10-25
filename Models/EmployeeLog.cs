@@ -1,7 +1,6 @@
 ﻿using System.Text.Json;
 using Azure;
-using Azure.Data.Tables;
-using Microsoft.WindowsAzure.Storage.Table;
+using ITableEntity = Azure.Data.Tables.ITableEntity;
 
 namespace employee_register_with_azure.Models
 {
